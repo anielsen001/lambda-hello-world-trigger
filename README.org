@@ -1,0 +1,79 @@
+#+TITLE: Set up of AWS Lambda function to trigger on file upload to S3 bucket
+
+* Background
+
+This is a hello world type application for AWS Lambda services that triggers when a file uploads to an S3 bucket. It reads the file, appends to it and then writes to another output S3 bucket.
+
+* Getting ready
+
+** AWS account
+
+You need an AWS account, create the account and follow Amazon's recommendations for creating an administrator and user accounts.
+
+** AWS cli tools
+
+It's easier to work from desktop command line with the aws and s3cmd command line tools setup. You can use these tools to manage your account from your command line.
+
+Information and installation instructions can be found here 
+https://aws.amazon.com/cli/
+
+You will have to generate API keys to configure the tool. After you run aws configure, the credentials are installed in ~/.aws/credentials
+
+** s3cmd tools
+
+these tools allow you to upload, download and interact with s3 buckets
+https://s3tools.org/usage
+
+You will have to generate API keys to configure the tool.
+
+
+** boto3 for python
+
+boto3 is the AWS module that provides python interaction and support. It can be pip installed. It can be used locally to interact with AWS or within lambda python code to interact with s3 and other AWS services. As of this writing, lambda's default support is python 3.8.
+
+* hello-world-trigger lambda package
+
+** python3 venv for dependencies
+
+All of the dependencies for the python code must be included in the package for upload to AWS. Use a virtual environment to track and maintain them all. This example only needs boto3.
+
+#+begin_src sh
+python3 -m venv venv_lambda
+source venv_lambda/bin/activate
+pip install boto3
+deactivate
+#+end_src
+
+** lambda function
+
+The lambda function must be called lambda_function.py and must have a function called lambda_handler.
+
+** zip file package
+
+All of the dependencies and lambda_function.py must be packaged into a zip file [1].
+
+#+begin_src sh
+export VIRTUALENV='venv_lambda'
+export PYTHON_VERSION='python3.7'
+export ZIP_FILE=lambda_function.zip
+
+cd $VIRTUALENV/lib/$PYTHON_VERSION/site-packages/
+zip -r9 ../../../../$ZIP_FILE
+cd ../../../../
+zip -g $ZIP_FILE lambda_function.py
+#+end_src
+
+** upload zip package to aws
+
+#+begin_src sh
+aws lambda update-function-code --function-name hello-world-trigger --zip-file fileb://lambda_function.zip
+#+end_src
+
+* References:
+
+[1] Basic lambda function setup, without S3 integration
+https://codeburst.io/aws-lambda-functions-made-easy-1fae0feeab27
+https://github.com/alexandraj777/plotly-to-slack-lambda-function
+
+[2] Example AWS documentation
+https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example-deployment-pkg.html#with-s3-example-deployment-pkg-python
